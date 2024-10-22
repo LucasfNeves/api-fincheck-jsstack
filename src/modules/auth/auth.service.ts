@@ -16,6 +16,30 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
+  async signin(signinDto: SigninDto) {
+    const { email, password } = signinDto;
+
+    const user = await this.usersRepo.findUnique({
+      where: {
+        email,
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const passwordMatch = await compare(password, user.password);
+
+    if (!passwordMatch) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const accessToken = await this.generateAccessToken(user.id);
+
+    return { accessToken };
+  }
+
   async signup(signupDto: SignupDto) {
     const { name, email, password } = signupDto;
 
@@ -63,29 +87,7 @@ export class AuthService {
     return { accessToken };
   }
 
-  async signin(signinDto: SigninDto) {
-    const { email, password } = signinDto;
 
-    const user = await this.usersRepo.findUnique({
-      where: {
-        email,
-      },
-    });
-
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    const passwordMatch = await compare(password, user.password);
-
-    if (!passwordMatch) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    const accessToken = await this.generateAccessToken(user.id);
-
-    return { accessToken };
-  }
 
   private async generateAccessToken(userId: string) {
     return this.jwtService.signAsync({ sub: userId });
