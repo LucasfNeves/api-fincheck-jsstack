@@ -3,13 +3,17 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { CreateBankAccountDto } from './dto/create-bank-account.dto';
-import { UpdateBankAccountDto } from './dto/update-bank-account.dto';
+import { CreateBankAccountDto } from '../dto/create-bank-account.dto';
+import { UpdateBankAccountDto } from '../dto/update-bank-account.dto';
 import { BankAccountRepository } from 'src/shared/database/repositories/bank-accounts.repositories';
+import { validateBankAccountOwnershipService } from './validate-bank-account-ownership.service';
 
 @Injectable()
 export class BankAccountsService {
-  constructor(private readonly bankAccountsRepo: BankAccountRepository) {}
+  constructor(
+    private readonly bankAccountsRepo: BankAccountRepository,
+    private readonly validateBankAccountOwnershipService: validateBankAccountOwnershipService,
+  ) {}
   create(userId: string, createBankAccountDto: CreateBankAccountDto) {
     const { name, initialBalance, color, type } = createBankAccountDto;
     return this.bankAccountsRepo.create({
@@ -38,7 +42,10 @@ export class BankAccountsService {
   ) {
     const { name, initialBalance, color, type } = updateBankAccountDto;
 
-    await this.validateOwns(userId, bankAccountId);
+    await this.validateBankAccountOwnershipService.validate(
+      userId,
+      bankAccountId,
+    );
 
     return this.bankAccountsRepo.update({
       where: {
@@ -54,7 +61,10 @@ export class BankAccountsService {
   }
 
   async delete(userId: string, bankAccountId: string) {
-    await this.validateOwns(userId, bankAccountId);
+    await this.validateBankAccountOwnershipService.validate(
+      userId,
+      bankAccountId,
+    );
 
     await this.bankAccountsRepo.delete({
       where: {
@@ -64,20 +74,5 @@ export class BankAccountsService {
     });
 
     return null;
-  }
-
-  private async validateOwns(userId: string, bankAccountId: string) {
-    const isOwner = await this.bankAccountsRepo.findFirst({
-      where: {
-        id: bankAccountId,
-        userId,
-      },
-    });
-
-    if (!isOwner) {
-      throw new UnauthorizedException(
-        'You are not allowed to perform this action',
-      );
-    }
   }
 }
