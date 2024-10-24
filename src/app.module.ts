@@ -5,11 +5,11 @@ import { AuthModule } from './modules/auth/auth.module';
 import { AuthGuard } from './modules/auth/auth.guard';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { BankAccountsModule } from './modules/bank-accounts/bank-accounts.module';
-import { TransationsModule } from './modules/transations/transations.module';
+import { TransactionsModule } from './modules/transactions/transactions.module';
 
 
 @Module({
-  imports: [UsersModule, DatabaseModule, AuthModule, CategoriesModule, BankAccountsModule, TransationsModule],
+  imports: [UsersModule, DatabaseModule, AuthModule, CategoriesModule, BankAccountsModule, TransactionsModule],
   controllers: [],
   providers: [{
     provide: 'APP_GUARD',
