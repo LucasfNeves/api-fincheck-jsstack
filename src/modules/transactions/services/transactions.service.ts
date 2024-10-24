@@ -6,6 +6,7 @@ import { validateBankAccountOwnershipService } from '../../bank-accounts/service
 import { ValidateCategoryOwnershipService } from '../../categories/services/validate-category-account-ownership.service';
 import { ActiveUserId } from 'src/shared/decorators/ActiveUserId';
 import { ValidateTransactionOwnershipService } from './validate-transaction-ownership.service';
+import { TransactionType } from '../entities/Transaction';
 
 @Injectable()
 export class TransactionsService {
@@ -39,8 +40,21 @@ export class TransactionsService {
     });
   }
 
-  findAllByUserId(userId: string) {
-    return this.transactionsRepo.findAllByUserId({ where: { userId } });
+  findAllByUserId(
+    userId: string,
+    filters: { month: number; year: number; bankAccountId?: string, type?: TransactionType },
+  ) {
+    return this.transactionsRepo.findAllByUserId({
+      where: {
+        userId,
+        bankAccountId: filters.bankAccountId,
+        type: filters.type,
+        date: {
+          gte: new Date(Date.UTC(filters.year, filters.month)),
+          lt: new Date(Date.UTC(filters.year, filters.month + 1)),
+        },
+      },
+    });
   }
 
   async update(
